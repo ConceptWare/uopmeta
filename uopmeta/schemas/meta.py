@@ -139,6 +139,10 @@ class MetaAttribute(NameWithId):
         None, description='id of class that defines this attribute')
     required: bool = False
 
+    def default_value(self):
+        info = attribute_types[self.type]
+        return info.default()
+
     @classmethod
     def random_attribute(cls, in_class_id=None):
         my_type = random_attribute_type()
