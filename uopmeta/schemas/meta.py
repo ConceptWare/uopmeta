@@ -1027,7 +1027,7 @@ class WorkingContext(MetaContext):
         if self.persist_to:
             self.persist_to.meta_insert(object)
 
-    def ensure_metas(self, num, meta_class):
+    def ensure_metas(self, num, meta_class:NameWithId):
         kind = meta_class.__fields__['kind'].default
         existing = list(getattr(self, kind).by_id.values())
         for _ in range(len(existing), num):
@@ -1038,6 +1038,16 @@ class WorkingContext(MetaContext):
         lst += [assoc_fn() for _ in range(needed)]
 
     def configure(self, num_assocs=4, num_instances=10, persist_to=None):
+        """
+        Ensures a given number of associations and instances exist creating
+        randomized ones if they do not. Optionally adds these instances
+        to some form of in memory or database persistence, e.g. a db interface
+
+        :param num_assocs: ther minimum number of associations of each type
+        :param num_instances: the minimum number of meta instances of each meta kind to ensure
+        :param persist_to: object able ta
+        :return:
+        """
         self.persist_to = persist_to
         for _ in range(len(self.instances), num_instances):
             instance = self.random_class().random_instance()
@@ -1054,6 +1064,7 @@ class WorkingContext(MetaContext):
         self.ensure_assocs(num_assocs, self.random_related, self.related)
 
     def random_class_instance(self, cls:MetaClass):
+        "creates and returns a raandomly generated instances of the cls"
         instance =  cls.random_instance()
         return instance
 
@@ -1064,6 +1075,7 @@ class WorkingContext(MetaContext):
         return MetaClass.random_class()
 
     def random_class(self):
+        "returns crandom cls id from existing classes"
         vals = [v for v in self.classes.by_id.values() if v.id != 'r00t']
         return random.choice(vals)
 
