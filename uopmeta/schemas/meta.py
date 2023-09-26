@@ -11,7 +11,8 @@ import random
 from functools import partial
 
 
-def legal_chars(s): return all([(x in index.radix.alphabet) for x in s])
+def legal_chars(s):
+    return all([(x in index.radix.alphabet) for x in s])
 
 get_field = lambda d, f: d.get(f) if isinstance(d, dict) else getattr(d, f, None)
 
@@ -64,11 +65,13 @@ class MetaPermissions(BaseModel):
 
     @root_validator
     def adjust_perms(cle, values):
+        values['modifiable'] = values['deletable'] = False
         if values['sys_defined']:
-            values['modifiable'] = values['deletable'] = False
             values['app_defined'] = False
         elif values['app_defined']:
             values['sys_defined'] = False
+        else:
+            values['modifiable'] = values['deletable'] = True
         return values
 
 
@@ -112,7 +115,6 @@ class NameWithId(BaseModel):
     id: str = Field(default_factory=lambda: str(
         make_oid('')), description='primary id ')
     description: str = ''
-    short_form: Optional[str]
     name: str = Field(...)
     permissions: MetaPermissions = Field(default_factory=MetaPermissions)
 
@@ -120,6 +122,16 @@ class NameWithId(BaseModel):
         data = self.dict()
         data.pop('kind', None)
         return data
+
+    @classmethod
+    def chamgeme_instance(cls, **kwargs):
+        return cls(name='ChangeME!', **kwargs)
+
+    def modifiable(self):
+        return self.permissions.modifiable
+
+    def deletable(self):
+        return self.permissions.deletable
 
 
     def __hash__(self):
@@ -318,9 +330,6 @@ class QueryComponent(BaseModel):
     def to_dict(self):
         if self.kind:
             return {self.kind: self.dict_contents()}
-
-
-
 
 
 class MetaQuery(NameWithId):
