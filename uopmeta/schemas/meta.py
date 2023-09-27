@@ -481,6 +481,9 @@ class MetaContext(BaseModel):
     group_children: dict = {}
     class_children: dict = {}
 
+    def metas_of_kind(self, kind):
+        return list(self.by_id(kind).values())
+
     def _by_name_id(self, kind):
         what = getattr(self, kind)
         if isinstance(what, ByNameId):
@@ -678,6 +681,30 @@ class MetaContext(BaseModel):
             subnames = [n for n in self.by_name('tags').keys() if n.startswith(name)]
             return [self.by_name('tags')[n].id for n in subnames]
         return []
+    def get_group_children(self, gid, recursive=True):
+        children = self.group_children.get(gid)
+        if children is None:
+            children = set()
+            for group in self.metas_of_kind('groups'):
+                group_id = group.id
+                if group_id == gid:
+                    continue
+                if gid is group.contained_in:
+                    children.add(group_id)
+                    if recursive:
+                        children |= self.get_group_children(group_id, recursive=True)
+                    self.group_children[gid] = children
+        return children
+
+    def possible_group_parents(self, gid):
+        """
+        Computes and returns ids of groups that are not yet parents or children of the given group
+        :return: possible parent set
+        """
+        group: MetaGroup = self.by_id('groups').get(gid)
+        children = set(self.get_group_children(gid))
+        all_groups = set(self.by_id('groups').keys())
+        return all_groups - (children | set(group.contained_in))
 
     def subgroups(self, gid):
         res = set()
