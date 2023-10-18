@@ -147,8 +147,8 @@ class NameWithId(BaseModel):
 class MetaAttribute(NameWithId):
     kind = 'attributes'
     type: str
-    class_id: Optional[str] = Field(
-        None, description='id of class that defines this attribute')
+    class_name: Optional[str] = Field(
+        None, description='name of class that defines this attribute')
     required: bool = False
 
     def default_value(self):
@@ -281,6 +281,17 @@ class MetaClass(NameWithId):
 
             instance[k] = attr.random_instance(*args)
         return self.make_instance(**instance) # ensure id
+
+    def add_attribute(self, name, type, description='', required=False):
+        if self.attributes and self.permissions.modifiable:
+            known = [a.name for a in self.attributes]
+            if name in known:
+                raise Exception(f'Class {self.name} alnead contain an attribute named {name}')
+            attr = MetaAttribute(name=name, type=type, required=required, description=description,
+                                 class_name=self.name)
+            self.attrs.append(attr.id)
+            self.attributes.append(attr)
+        return attr
 
 class MetaTag(NameWithId):
     kind = 'tags'
@@ -817,10 +828,10 @@ class Related(Associated):
 
 
 
-def app_attr(name, type_, modifiable=True):
+def app_attr(name, type_, modifiable=True, **kwargs):
     perms = AppPermissions()
     perms.modifiable=modifiable
-    return MetaAttribute(name=name, type=type_, permissions=perms)
+    return MetaAttribute(name=name, type=type_, permissions=perms, **kwargs)
 
 
 
