@@ -492,6 +492,14 @@ class MetaContext(BaseModel):
     group_children: dict = {}
     class_children: dict = {}
 
+    def deep_copy(self):
+        instance = self.__class__()
+        for kind in kind_map:
+            instance.load_objects(self.metas_of_kind(kind))
+        instance.complete()
+        return instance
+
+
     def metas_of_kind(self, kind):
         return list(self.by_id(kind).values())
 
@@ -519,14 +527,25 @@ class MetaContext(BaseModel):
         kwargs['exclude'] = excluded
         return super().dict(*args, **kwargs)
 
+    def load_objects(self, objects):
+        for obj in objects:
+            self.add(obj)
+
+
+    @classmethod
+    def from_kind_objects(cls, kind_map):
+        instance = cls()
+        for kind, objects in kind_map.items():
+            instance.load_objects(objects)
+        return instance
+
     @classmethod
     def from_data(cls, data_dict):
         instance = cls()
         for kind, items in data_dict.items():
             target_class = kind_map.get(kind)
-            for item in items:
-                created = target_class(**item)
-                instance.add(created)
+            objects = [target_class(**item) for item in items]
+            instance.load_objects(objects)
         instance.complete()
         return instance
 
