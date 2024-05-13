@@ -770,9 +770,27 @@ NameWithId.update_forward_refs()
 def contains_deleted_fn(deleted_objects, deleted_classes):
     return lambda obj_id: (obj_id in deleted_objects) or (oid_class(obj_id) in deleted_classes)
 
+class SecondaryIndex(BaseModel):
+    name: str
+    unique: bool = False
+    fields: List[str]
+    
+def make_secondary_indices(collection_name, *field_lists):
+    res = []
+    for fields in field_lists:
+        f_name = '_'.join(fields)
+        name = f'{collection_name}_{f_name}'  
+        res.append(SecondaryIndex(name=name, fields=fields))
+    return res
+
 class Associated(BaseModel):
+    kind = ''
     assoc_id: str = Field(..., description='id of association')
     object_id: str = Field(..., description='id of object associated')
+
+    @classmethod
+    def secondary_indices(cls):
+        return make_secondary_indices(cls.kind,['assoc_id'], ['object_id'])
 
     def contains_deleted(self, deleted_objects, deleted_classes):
         return contains_deleted_fn(deleted_objects, deleted_classes)(self.object_id)
@@ -832,6 +850,15 @@ class Related(Associated):
     @classmethod
     def make(cls, subject_id, role_id, object_id):
         return cls(assoc_id=role_id, object_id=object_id, subject_id=subject_id)
+
+    @classmethod
+    def secondary_indices(cls):
+        return make_secondary_indices(cls.kind,
+                                      ['assoc_id'],
+                                      ['object_id'],
+                                      ['subject_id'],
+                                      ['assoc_id', 'object_id'],
+                                      ['assoc_id', 'subject_id'])
 
     @property
     def role_id(self):
@@ -1225,6 +1252,11 @@ kind_map = dict(
     grouped=Grouped,
     related=Related)
 
+secondary_indices = dict(
+    tagged = Tagged.secondary_indices(),
+    grouped = Grouped.secondary_indices(),
+    related = Related.secondary_indices()
+)
 
 root = MetaClass(id='r00t', name='PersistentObject', superclass='',
                  attributes=[MetaAttribute(
