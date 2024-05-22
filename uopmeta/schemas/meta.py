@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional, Any
+from typing import List, Optional, Any, ClassVar
 from pydantic import Field, root_validator
 from uopmeta.oid import oid_sep, make_oid, oid_class
 from uopmeta.attr_info import attribute_types, meta_kinds
@@ -789,8 +789,8 @@ class Associated(BaseModel):
     object_id: str = Field(..., description='id of object associated')
 
     @classmethod
-    def secondary_indices(cls):
-        return make_secondary_indices(cls.kind,['assoc_id'], ['object_id'])
+    def secondary_indices(cls, name):
+        return make_secondary_indices(name,['assoc_id'], ['object_id'])
 
     def contains_deleted(self, deleted_objects, deleted_classes):
         return contains_deleted_fn(deleted_objects, deleted_classes)(self.object_id)
@@ -811,7 +811,7 @@ class Associated(BaseModel):
             dbi.meta_insert(self.dict())
 
 class Tagged(Associated):
-    kind='tagged'
+    #kind='tagged'
     @classmethod
     def make(cls, group_id, object_id):
         return cls(assoc_id=group_id, object_id=object_id)
@@ -826,7 +826,7 @@ class Tagged(Associated):
 
 
 class Grouped(Associated):
-    kind="grouped"
+    kind = "grouped"
 
     @classmethod
     def make(cls, group_id, object_id):
@@ -852,8 +852,8 @@ class Related(Associated):
         return cls(assoc_id=role_id, object_id=object_id, subject_id=subject_id)
 
     @classmethod
-    def secondary_indices(cls):
-        return make_secondary_indices(cls.kind,
+    def secondary_indices(cls, name):
+        return make_secondary_indices(name,
                                       ['assoc_id'],
                                       ['object_id'],
                                       ['subject_id'],
@@ -1253,9 +1253,9 @@ kind_map = dict(
     related=Related)
 
 secondary_indices = dict(
-    tagged = Tagged.secondary_indices(),
-    grouped = Grouped.secondary_indices(),
-    related = Related.secondary_indices()
+    tagged = Tagged.secondary_indices('tagged'),
+    grouped = Grouped.secondary_indices('grouped'),
+    related = Related.secondary_indices('related')
 )
 
 root = MetaClass(id='r00t', name='PersistentObject', superclass='',

@@ -9,5 +9,5 @@ setup(name='uopmeta',
       author_email='sjatkins@protonmail.com',
       license='internal',
       packages=packages,
-      install_requires = ['validators', 'pytest', 'sjautils'],
+      install_requires = ['validators', 'pytest', 'sjautils', 'pydantic'],
       zip_safe=False)
