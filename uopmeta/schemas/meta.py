@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Dict
 from pydantic import Field, root_validator
 from uopmeta.oid import oid_sep, make_oid, oid_class
 from uopmeta.attr_info import attribute_types, meta_kinds
@@ -82,6 +82,21 @@ class SystemPermissions(MetaPermissions):
 class AppPermissions(MetaPermissions):
     app_defined = True
 
+class User(BaseModel):
+    id: str = Field(default_factory=lambda: str(
+        make_oid('')), description='primary id ')
+    name: str
+    email: str = ''
+    tenant_id: str = ''
+    is_superuser: bool = False
+    is_admin: bool = False
+
+class Tenant(BaseModel):
+    id: str = Field(default_factory=lambda: str(
+        make_oid('')), description='primary id ')
+    name: str
+    base_collections: Dict[str, str]   # kind -> collection_name
+    cls_extensions: Dict[str, str]  # cls.id -> extension collection_name
 
 class ByNameId(BaseModel):
     by_id: dict = {}
@@ -124,8 +139,10 @@ class NameWithId(BaseModel):
         return data
 
     @classmethod
-    def chamgeme_instance(cls, **kwargs):
+    def create_random(cls, **kwargs):
         return cls(name='ChangeME!', **kwargs)
+
+
 
     def modifiable(self):
         return self.permissions.modifiable
@@ -143,6 +160,8 @@ class NameWithId(BaseModel):
         if self.description != other.description:
             changes.modify(self.id, dict(description=other.description))
 
+    def random_instance(self):
+        pass
 
 class MetaAttribute(NameWithId):
     kind = 'attributes'
@@ -197,6 +216,10 @@ class MetaClass(NameWithId):
         name = f'Class_{random.randint(1000, 9999)}'
         attributes = [MetaAttribute.random_attribute() for _ in range(num_attrs)]
         return cls(superclass=super_name, name=name, attributes=attributes)
+
+    @classmethod
+    def create_random(cls, **kwargs):
+        return cls.random_class(**kwargs)
 
     @classmethod
     def root(cls):
@@ -1234,6 +1257,15 @@ class WorkingContext(MetaContext):
 
 
 
+class Database(BaseModel):
+    id: str = Field(default_factory=lambda: str(
+        make_oid('')), description='primary id ')
+    name: str
+    host: str
+    port: int
+    args: dict = {}
+
+
 
 
 
@@ -1250,7 +1282,11 @@ kind_map = dict(
     queries=MetaQuery,
     tagged=Tagged,
     grouped=Grouped,
-    related=Related)
+    related=Related,
+    users=User,
+    databases=Database,
+    schemas=DBFormSchema,  # TODO ferret out how these load
+    tenants=Tenant)
 
 secondary_indices = dict(
     tagged = Tagged.secondary_indices(),
