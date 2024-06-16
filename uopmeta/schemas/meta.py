@@ -835,7 +835,7 @@ class Associated(BaseModel):
             dbi.meta_insert(self.dict())
 
 class Tagged(Associated):
-    #kind='tagged'
+    kind='tagged'
     @classmethod
     def make(cls, group_id, object_id):
         return cls(assoc_id=group_id, object_id=object_id)
