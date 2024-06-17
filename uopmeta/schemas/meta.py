@@ -1274,6 +1274,10 @@ def cls_data(name, superclass, *attributes, description='', abstract=False,
              **field_values):
     pass
 
+class MetaChanges(BaseModel):
+    timestamp: float
+    changes: dict
+
 kind_map = dict(
     classes=MetaClass,
     attributes=MetaAttribute,
@@ -1287,7 +1291,9 @@ kind_map = dict(
     users=User,
     databases=Database,
     schemas=DBFormSchema,  # TODO ferret out how these load
-    tenants=Tenant)
+    tenants=Tenant,
+    changes=MetaChanges,
+)
 
 secondary_indices = dict(
     tagged = Tagged.secondary_indices('tagged'),
@@ -1316,29 +1322,4 @@ core_schema = Schema(
 )
 
 
-
-
-class Application(BaseModel):
-    """
-    An application specification as a set of metadata for the application.
-    A good open question is whether this specification should include a target
-    database for the application.  It would make sense to do this in the cloud
-    and perhaps some desktop environments where the system topology creates a
-    fixed primary address.  But it may be more general and flexible to assign
-    a user definition to a database along with any clases it may contain.
-    This will work as long as we don't put mulitple applications on the same database.
-    In the not hardled case we need to dynamically update a user's metadata. This
-    isn't that hard using the general changeset mechanism.
-    """
-    id:str = Field(default_factory=make_app_id)
-    name: str
-    description: str = ''
-    app_schema: Schema
-
-    def db_form(self):
-        return self.dict()
-
-    @classmethod
-    def from_db(cls, data):
-        return cls(**data)
 
