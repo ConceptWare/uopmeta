@@ -1261,9 +1261,10 @@ class WorkingContext(MetaContext):
 class Database(BaseModel):
     id: str = Field(default_factory=lambda: str(
         make_oid('')), description='primary id ')
-    name: str
-    host: str
-    port: int
+    name: Optional[str]
+    tenancy: str
+    host: Optional[str]
+    port: Optional[int]
     args: dict = {}
 
 
