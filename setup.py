@@ -9,5 +9,5 @@ setup(name='uopmeta',
       author_email='sjatkins@protonmail.com',
       license='internal',
       packages=packages,
-      install_requires = ['validators', 'pytest', 'sjautils', 'pydantic'],
+      install_requires = ['pydantic==1.10.7','validators', 'pytest', 'sjautils', 'pydantic'],
       zip_safe=False)
