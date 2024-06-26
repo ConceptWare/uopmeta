@@ -620,7 +620,9 @@ class MetaContext(BaseModel):
                 if c_instance:
                     c_instance.get_changes(instance, changes)
                 else:
-                    change_kind.insert(instance.dict())
+                    data = instance.dict()
+                    data.pop('kind', None)
+                    change_kind.insert(data)
 
         subschemas = a_schema.uses_schemas +  a_schema.requires_schemas
         for sub in subschemas:
