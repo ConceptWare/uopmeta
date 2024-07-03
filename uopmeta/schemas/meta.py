@@ -439,7 +439,7 @@ class Schema(BaseSchema):
         name='uop_core',
         classes = [root,
                    sys_class('DescribedComponent', 'PersistentObject',
-                                  app_attr('createdAt', 'date'),
+                                  app_attr('createdAt', 'float'),
                                   app_attr('description', 'string'),
                                   description='root of all described content', abstract=False),
                    ]
@@ -1317,7 +1317,7 @@ core_schema = Schema(
     name='uop_core',
     classes = [root,
                sys_class('DescribedComponent', 'PersistentObject',
-                              app_attr('createdAt', 'date', modifiable=False),
+                              app_attr('createdAt', 'float', modifiable=False),
                               app_attr('description', 'string'),
                               description='root of all described content', abstract=True),
                ]
